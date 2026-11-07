@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neto Pode Recicla - Dashboard de PEVs</title>
+    <!-- Tailwind CSS para estilização moderna -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para renderizar os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Cabeçalho -->
+    <header class="bg-emerald-700 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-recycle"></i> Neto Pode Recicla — Portal do PEV
+                </h1>
+                <p class="text-emerald-100 text-sm mt-1">Painel de monitoramento e impacto de REEE</p>
+            </div>
+            <div class="mt-4 md:mt-0 bg-emerald-800 px-4 py-2 rounded-lg text-sm border border-emerald-600">
+                <span class="block text-emerald-300 text-xs font-semibold uppercase">Status da Conexão</span>
+                <span class="font-bold text-lg text-emerald-100">● Sincronizado</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- Barra de Filtros Interativos (Mês e PEV) -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-filter text-emerald-600 text-lg"></i>
+                <span class="font-bold text-gray-700">Filtrar Visualização:</span>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <!-- Filtro por Local / PEV -->
+                <div>
+                    <label for="filtro-pev" class="block text-xs font-medium text-gray-500 mb-1">Local / PEV</label>
+                    <select id="filtro-pev" onchange="aplicarFiltros()" class="w-full bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="todos">Todos os PEVs</option>
+                    </select>
+                </div>
+
+                <!-- Filtro por Mês -->
+                <div>
+                    <label for="filtro-mes" class="block text-xs font-medium text-gray-500 mb-1">Mês de Referência</label>
+                    <select id="filtro-mes" onchange="aplicarFiltros()" class="w-full bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="todos">Todos os Meses</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Indicadores de Impacto (KPIs) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Card de Peso Total -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="bg-emerald-100 text-emerald-700 p-4 rounded-xl text-2xl">
+                    <i class="fa-solid fa-weight-scale"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Coletado</p>
+                    <h3 id="total-peso" class="text-2xl font-bold text-gray-800">Carregando...</h3>
+                    <span class="text-xs text-emerald-600 font-semibold">Resíduos Eletrônicos (REEE)</span>
+                </div>
+            </div>
+
+            <!-- Card de CO2 Evitado -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="bg-blue-100 text-blue-700 p-4 rounded-xl text-2xl">
+                    <i class="fa-solid fa-cloud"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">CO₂ Evitado</p>
+                    <h3 id="total-co2" class="text-2xl font-bold text-gray-800">0.0 kg</h3>
+                    <span class="text-xs text-blue-600 font-semibold">Emissões poupadas</span>
+                </div>
+            </div>
+
+            <!-- Card de Água Não Desperdiçada -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="bg-cyan-100 text-cyan-700 p-4 rounded-xl text-2xl">
+                    <i class="fa-solid fa-droplet"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Água Poupada</p>
+                    <h3 id="total-agua" class="text-2xl font-bold text-gray-800">0.0 L</h3>
+                    <span class="text-xs text-cyan-600 font-semibold">Recursos hídricos salvos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção do Gráfico de Rosca -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-emerald-600"></i> Distribuição dos Resíduos por Item (Kg)
+            </h3>
+            <div class="relative h-96">
+                <canvas id="pevChart"></canvas>
+            </div>
+        </div>
+
+    </main>
+
+<!-- Nota Metodológica e Referência Científica -->
+        <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-xl mb-8 text-xs md:text-sm flex items-start gap-3 shadow-sm">
+            <i class="fa-solid fa-circle-info text-emerald-600 mt-1 text-base"></i>
+            <div>
+                <span class="font-bold">Metodologia de Impacto Ambiental:</span> Os indicadores de CO₂ evitado e água poupada são calculados com base em fatores médios do setor de reciclagem de REEE (aproximadamente 1,5 kg de CO₂ evitado e 12 litros de água poupados por quilo de resíduo processado).
+                <br>
+                <span class="text-emerald-700 font-medium">Base Literária de Referência:</span> Parâmetros alinhados às diretrizes do <span class="italic">The Global E-waste Monitor</span> (UNITAR/UNU) e estudos de mineração urbana voltados à educação ambiental e economia circular.
+            </div>
+        </div>
+
+
+    <!-- Rodapé -->
+    <footer class="bg-gray-900 text-gray-400 text-center py-6 mt-12">
+        <p>&copy; 2026 Neto Pode Recicla — Gestão de Resíduos Eletrônicos.</p>
+    </footer>
+
+    <!-- Script de Integração e Cálculo de Impacto -->
+    <script>
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgU3KmsPFgukUdxSOmvg5Eh0XLVKC49UReudGwMh_I7EygFzvT5H-eK1xPtxzA87PI/exec';
+
+      let dadosBrutosPlanilha = [];
+
+      async function carregarDadosPlanilha() {
+        try {
+          const resposta = await fetch(APPS_SCRIPT_URL);
+          dadosBrutosPlanilha = await resposta.json();
+
+          popularOpcoesFiltros(dadosBrutosPlanilha);
+          aplicarFiltros();
+
+        } catch (erro) {
+          console.error('Erro ao buscar dados do Google Sheets:', erro);
+          document.querySelector('#total-peso').innerText = 'Erro ao carregar';
+        }
+      }
+
+      function popularOpcoesFiltros(dados) {
+        const selectPev = document.getElementById('filtro-pev');
+        const selectMes = document.getElementById('filtro-mes');
+
+        const pevsUnicos = new Set();
+        const mesesUnicos = new Set();
+
+        dados.forEach(linha => {
+          const pev = linha['Pev'] || linha['PEV'];
+          const mes = linha['Mês'] || linha['Mes'];
+
+          if (pev) pevsUnicos.add(pev);
+          if (mes) mesesUnicos.add(mes);
+        });
+
+        pevsUnicos.forEach(pev => {
+          const option = document.createElement('option');
+          option.value = pev;
+          option.textContent = pev;
+          selectPev.appendChild(option);
+        });
+
+        mesesUnicos.forEach(mes => {
+          const option = document.createElement('option');
+          option.value = mes;
+          option.textContent = mes;
+          selectMes.appendChild(option);
+        });
+      }
+
+      function aplicarFiltros() {
+        const pevSelecionado = document.getElementById('filtro-pev').value;
+        const mesSelecionado = document.getElementById('filtro-mes').value;
+
+        let totalKg = 0;
+        const itensAgrupados = {};
+
+        dadosBrutosPlanilha.forEach(linha => {
+          const pevLinha = linha['Pev'] || linha['PEV'] || '';
+          const mesLinha = linha['Mês'] || linha['Mes'] || '';
+
+          const atendePev = (pevSelecionado === 'todos' || pevSelecionado === pevLinha);
+          const atendeMes = (mesSelecionado === 'todos' || mesSelecionado === mesLinha);
+
+          if (atendePev && atendeMes) {
+            const pesoBruto = linha['Peso (kg)'] !== undefined ? linha['Peso (kg)'] : linha['Peso'];
+            const peso = parseFloat(pesoBruto) || 0;
+            const nomeItem = linha['Item'] || linha['Material'] || 'Outros';
+
+            totalKg += peso;
+            itensAgrupados[nomeItem] = (itensAgrupados[nomeItem] || 0) + peso;
+          }
+        });
+
+        // 1. Atualiza os valores na tela (Peso, CO2 e Água)
+        document.querySelector('#total-peso').innerText = `${totalKg.toFixed(3)} kg`;
+        
+        // Fatores de impacto ambiental multiplicados pelo total de quilos filtrados
+        const co2Evitado = totalKg * 1.5; // Média de 1.5 kg de CO2 evitado por kg de REEE
+        const aguaPoupada = totalKg * 12; // Média de 12 litros de água poupados por kg de REEE
+
+        document.querySelector('#total-co2').innerText = `${co2Evitado.toFixed(1)} kg`;
+        document.querySelector('#total-agua').innerText = `${aguaPoupada.toFixed(1)} L`;
+
+        // 2. Atualiza o Gráfico de Rosca
+        renderizarGrafico(Object.keys(itensAgrupados), Object.values(itensAgrupados));
+      }
+
+      function renderizarGrafico(labels, valores) {
+        const canvas = document.getElementById('pevChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        if (window.meuGraficoPEV) {
+          window.meuGraficoPEV.destroy();
+        }
+
+        const cores = [
+          'rgba(16, 185, 129, 0.85)',
+          'rgba(59, 130, 246, 0.85)',
+          'rgba(245, 158, 11, 0.85)',
+          'rgba(139, 92, 246, 0.85)',
+          'rgba(239, 68, 68, 0.85)',
+          'rgba(14, 165, 233, 0.85)',
+          'rgba(236, 72, 153, 0.85)',
+          'rgba(107, 114, 128, 0.85)',
+          'rgba(202, 138, 4, 0.85)'
+        ];
+
+        window.meuGraficoPEV = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: valores,
+              backgroundColor: cores,
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  boxWidth: 15,
+                  font: { size: 12 }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      window.addEventListener('DOMContentLoaded', carregarDadosPlanilha);
+    </script>
+</body>
+</html>
